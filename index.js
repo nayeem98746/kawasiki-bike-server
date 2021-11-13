@@ -23,6 +23,7 @@ async function run(){
         const explore2Collection = database.collection('explore2')
         const reviewCollection = database.collection('review')
         const usersCollection = database.collection('users')
+        const orderCollection = database.collection('orders')
         // get api
         app.get('/explore', async(req, res)=> {
             const cursor = exploreCollection.find({})
@@ -59,12 +60,18 @@ async function run(){
           res.json(result)
         })
 
-        // review
+        // review post
         app.post('/addReview', async (req,res)=> {
           const review = req.body
           const result = await reviewCollection.insertOne(review)
           res.send(result)
         })
+        // review get
+        app.get('/addReview', async(req, res)=> {
+          const cursor = reviewCollection.find({})
+          const result =  await cursor.toArray()
+          res.send(result)
+      })
       
         // user post
         app.post('/users' , async (req, res)=> {
@@ -82,6 +89,51 @@ async function run(){
           const result = await usersCollection.updateOne(filter,updateDoc)
           res.json(result)
         })
+        app.get('/users/:email', async(req, res)=> {
+          const email= req.params.email
+          const query = {email: email}
+          const user = await usersCollection.findOne(query)
+          let isAdmin = false;
+          if(user?.role === 'admin'){
+            isAdmin = true;
+          }
+          res.json({admin : isAdmin})
+        })
+
+        //orders get
+        app.get('/orders', async ( req , res)=> {
+          let query = {}
+          const email = req.query.email
+          if(email){
+            query = {email : email}
+
+          }
+          const cursor = orderCollection.find(query)
+          const orders = await cursor.toArray()
+          res.json(orders)
+        })
+
+
+        // orders api
+        app.post('/orders' ,async (req,res)=> {
+          const order = req.body
+          // order.createdAt = new Data()
+          const result = await orderCollection.insertOne(order)
+          res.json(result)
+
+        })
+        // delete api
+        app.delete('/orders/:id' , async(req, res)=> {
+          const id = req.params.id
+          const query ={_id:ObjectId(id)}
+          const result = await orderCollection.deleteOne(query)
+          res.json(result)
+      })
+        
+
+
+
+
 
     }
     finally{
